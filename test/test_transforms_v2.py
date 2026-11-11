@@ -5184,7 +5184,16 @@ class TestPerspective:
             canvas_size=bounding_boxes.canvas_size,
             **kwargs,
         )
-
+        
+    @pytest.mark.parametrize("size", [(8, 1), (1, 8), (1, 1)])
+    def test_random_perspective_one_pixel_side(self, size):
+        # A one-pixel side collapses the corner points, so inputs are returned unchanged (#9747).
+        image = tv_tensors.Image(torch.rand(3, *size))
+        boxes = tv_tensors.BoundingBoxes([[0, 0, size[1], size[0]]], format="XYXY", canvas_size=size)
+        out_image, out_boxes = transforms.RandomPerspective(p=1)(image, boxes)
+        torch.testing.assert_close(out_image, image)
+        torch.testing.assert_close(out_boxes, boxes)
+        
     def test_kernel_bounding_boxes_error(self):
         bounding_boxes = make_bounding_boxes()
         format, canvas_size = bounding_boxes.format, bounding_boxes.canvas_size

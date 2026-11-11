@@ -1886,7 +1886,14 @@ def test_randomperspective():
             tr_img, F.convert_image_dtype(F.pil_to_tensor(img))
         ) + 0.3 > torch.nn.functional.mse_loss(tr_img2, F.convert_image_dtype(F.pil_to_tensor(img)))
 
-
+@pytest.mark.parametrize("size", [(8, 1), (1, 8), (1, 1)])
+def test_randomperspective_one_pixel_side(size):
+    # A one-pixel side collapses the corner points, so the image is returned unchanged (#9747).
+    img = torch.rand(3, *size)
+    out = transforms.RandomPerspective(p=1.0)(img)
+    torch.testing.assert_close(out, img)
+    
+    
 @pytest.mark.parametrize("seed", range(10))
 @pytest.mark.parametrize("mode", ["L", "RGB", "F"])
 def test_randomperspective_fill(mode, seed):
